@@ -1,0 +1,26 @@
+---
+# Kibana
+- name: Start Kibana
+  systemd: name=kibana state=started
+  become: ture
+
+- name: Reload Kibana
+  systemd: name=kibana state=reloaded
+  become: ture
+
+- name: Stopped Kibana
+  systemd: name=kibana state=stopped
+  become: ture
+
+# elasticsearch
+- name: Start Elasticsearch
+  systemd: name=elasticsearch state=started
+  become: ture
+
+- name: Reload Elasticsearch
+  systemd: name=elasticsearch state=reloaded
+  become: ture
+
+- name: Stopped Elasticsearch
+  systemd: name=elasticsearch state=stopped
+  become: ture

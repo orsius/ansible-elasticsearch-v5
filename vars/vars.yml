@@ -1,0 +1,17 @@
+---
+# kibana vars
+kib_port: 5601
+kib_host: "{{ inventory_hostname }}"
+
+# elasticsearch vars
+es_host: "{{ inventory_hostname }}"
+es_port: 9200
+es_cluster_name: "Demogorgon"
+es_max_map_count: 262144
+es_path_logs: "/var/log/elasticsearch"
+es_path_data: "/var/lib/elasticsearch"
+
+# hostname list
+es_Node_01: "centos-es-01"
+es_Node_02: "centos-es-02"
+es_Node_03: "centos-es-03"

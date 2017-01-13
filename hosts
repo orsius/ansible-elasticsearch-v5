@@ -1,0 +1,36 @@
+# This is the default ansible 'hosts' file.
+#
+# It should live in /etc/ansible/hosts
+#
+#   - Comments begin with the '#' character
+#   - Blank lines are ignored
+#   - Groups of hosts are delimited by [header] elements
+#   - You can enter hostnames or ip addresses
+#   - A hostname/ip can be a member of multiple groups
+
+## blue.example.com
+## 192.168.100.10
+## db-[99:101]-node.example.com
+## www[001:006].example.com
+
+[local]
+127.0.0.1
+
+[es-master]
+centos-es-01
+
+[es-data]
+centos-es-02
+#192.168.1.81 ansible_host=centos-es-01
+#192.168.1.82
+
+[kibana]
+#192.168.1.83 ansible_host=centos-es-03
+centos-es-03
+
+
+[elasticsarch:children]
+es-master
+es-data
+
+[dbservers]

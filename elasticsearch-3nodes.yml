@@ -1,0 +1,87 @@
+---
+- name: Install + Setup a 3 nodes elasticsearch cluster
+  hosts: es-master
+  vars_files:
+    - vars/vars.yml
+  gather_facts: False
+
+  tasks:
+    # Copy elastic repository file in /etc/yum.repos.d
+    - copy:
+        src: files/elastic.repo
+        dest: /etc/yum.repos.d/elastic.repo
+        owner: root
+        group: root
+        mode: 0644
+        backup: yes
+      become: true
+    # read the new repository file
+    - command: /usr/bin/yum clean expire-cache
+      become: true
+    - command: /usr/bin/yum repolist
+      become: true
+
+    # Install packages
+    - name: Install desired packages
+      yum: >
+        package={{ item }}
+        state=present
+      with_items:
+        - elasticsearch
+        - tree
+        - jq
+        - vim
+      become: true
+
+    # Create the Elasticsearch.yml file from template
+    - template:
+        src: files/elasticsearch.yml.j2
+        dest: /etc/elasticsearch/elasticsearch.yml
+        owner: root
+        group: elasticsearch
+        mode: "u=rw,g=rw,o=r"
+        force: yes
+      become: true
+
+    # jvm options /etc/elasticsearch/jvm.options
+    # create a backup first
+    - command: /usr/bin/cp /etc/elasticsearch/jvm.options /etc/elasticsearch/jvm.options.origin
+      become: true
+    # Copy elastic repository file in /etc/yum.repos.d
+    - copy:
+        src: files/es-jvm.options
+        dest: /etc/elasticsearch/jvm.options
+        owner: root
+        group: elasticsearch
+        mode: 0644
+        backup: yes
+      become: true
+
+    # pam limit.d
+    - copy:
+        src: files/es-pam.conf
+        dest: /etc/security/limits.d/elasticsearch-pam.conf
+        owner: root
+        group: root
+        mode: 0644
+        backup: yes
+      become: true
+
+    # edit elasticsearch.service
+    # read the new repository file
+    # ## /!\ Consider using template or lineinfile module rather than running sed
+    - command: /usr/bin/sed -i '/^\#LimitMEMLOCK=infinity/ { s/\#//; }' /usr/lib/systemd/system/elasticsearch.service
+      become: true
+    # reload the systemd daemon-reload
+    - command: /usr/bin/systemctl daemon-reload
+      become: true
+
+    # Increase max_map_count Parameter
+    - template:
+        src: files/es-max_map_count.conf.j2
+        dest: /etc/sysctl.d/es-max_map_count.conf
+        owner: root
+        group: root
+        mode: "u=rw,g=rw,o=r"
+        force: yes
+      become: true

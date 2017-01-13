@@ -1,0 +1,66 @@
+---
+- name: Try To Install and setup a kibana node on rhel7
+  hosts: es-data
+  vars_files:
+    - vars/vars.yml
+  gather_facts: False
+
+  tasks:
+    # Copy elastic repository file in /etc/yum.repos.d
+    - copy:
+        src: files/elastic.repo
+        dest: /etc/yum.repos.d/elastic.repo
+        owner: root
+        group: root
+        mode: 0644
+        backup: yes
+      become: true
+    # read the new repository file
+    - command: /usr/bin/yum clean expire-cache
+      become: true
+    - command: /usr/bin/yum repolist
+      become: true
+
+    # Install packages
+    - name: Install desired packages
+      yum: >
+        package={{ item }}
+        state=present
+      with_items:
+        - kibana
+        - tree
+        - jq
+        - vim
+      become: true
+
+    # Create the kibana.yml file from template
+    - template:
+        src: files/kibana.yml.j2
+        dest: /etc/kibana/kibana.yml
+        owner: root
+        group: root
+        mode: "u=rw,g=rw,o=r"
+        force: true
+      become: true
+
+    # Create a dummy kibana log file & set the correct ownershipt var/log/kibana.log
+    - copy:
+        src: files/kibana.log
+        dest: /var/log/kibana.log
+        owner: kibana
+        group: kibana
+        mode: 0644
+        backup: yes
+        force: true
+      become: true
+
+    # start the kibana service
+    - systemd:
+        name: kibana
+        state: started
+      become: true
+    # enable kibana service @boot
+    - systemd:
+        name: kibana
+        enabled: yes
+      become: true
