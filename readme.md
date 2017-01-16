@@ -8,7 +8,7 @@ The prerequisits are simples:
 
 * [DE - blogpost ](https://www.data-essential.com/category/blog/)
 
-## Technology included
+## Technology used
 
 * [Centos7](https://www.centos.org/download/), [RHEL7](https://access.redhat.com/downloads)
 * [Ansible](http://docs.ansible.com/ansible/)

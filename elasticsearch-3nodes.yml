@@ -1,6 +1,6 @@
 ---
 - name: Install + Setup a 3 nodes elasticsearch cluster
-  hosts: es-master
+  hosts: elastic
   vars_files:
     - vars/vars.yml
   gather_facts: False

@@ -1,6 +1,6 @@
 ---
 - name: Try To Install and setup a kibana node on rhel7
-  hosts: es-data
+  hosts: kibana
   vars_files:
     - vars/vars.yml
   gather_facts: False
