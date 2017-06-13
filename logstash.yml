@@ -1,0 +1,93 @@
+---
+- name: Install + Setup logstash components
+  #hosts: ELK-LOGFPRD01-VMH.oi.bdl.lu
+  hosts: logstash
+  vars_files:
+    - vars/vars.yml
+  # gather_facts: False
+
+  tasks:
+    #- debug: var=ansible_default_ipv4.address
+    #- debug: var=hostvars['ansible_facts']['ansible_default_ipv4']['address']
+    # Copy elastic repository file in /etc/yum.repos.d
+    #- copy:
+    #    src: files/elastic.repo
+    #    dest: /etc/yum.repos.d/elastic.repo
+    #    owner: root
+    #    group: root
+    #    mode: 0644
+    #    backup: yes
+    #  become: true
+    # read the new repository file
+    #- command: /usr/bin/yum clean expire-cache
+    #  become: true
+    #- command: /usr/bin/yum repolist
+    #  become: true
+
+   # Create logstash user and group
+    - group:
+        name: logstash
+        gid: 2001
+        state: present
+      become: true
+
+    - user:
+        name: logstash
+        comment: "logstash user"
+        uid: 2001
+        group: logstash
+        shell: /sbin/nologin
+        state: present
+      become: true
+    # Install packages
+    - name: Install desired packages
+      yum: >
+        package={{ item }}
+        state=present
+#        key=no
+      with_items:
+        - java-1.8.0-openjdk
+        - logstash
+      become: true
+
+    # Create the logstash.yml file from template
+    - template:
+        src: files/logstash.yml.j2
+        dest: /etc/logstash/logstash.yml
+        owner: root
+        group: logstash
+        mode: "u=rw,g=rw"
+        force: yes
+        backup: yes
+      become: true
+
+    # jvm options /etc/logstash/jvm.options
+    # create a backup first
+    - command: /usr/bin/cp /etc/logstash/jvm.options /etc/logstash/jvm.options.origin
+      become: true
+    # Copy elastic repository file in /etc/yum.repos.d
+    - template:
+        src: files/jvm.options.logstash.j2
+        dest: /etc/logstash/jvm.options
+        owner: root
+        group: logstash
+        mode: 0644
+        force: yes
+        backup: yes
+      become: true
+
+
+  #Create and check for directories
+
+#    - file:
+#        dest: /{{item}}
+#        state: directory
+#        mode: 0750
+#        owner: elasticsearch
+#        group: elasticsearch
+#      with_items:
+#          - data1
+#          - data2
+#          - data3
+#      become: true
+

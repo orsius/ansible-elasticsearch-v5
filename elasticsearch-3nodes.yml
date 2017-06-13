@@ -1,36 +1,56 @@
 ---
 - name: Install + Setup a 3 nodes elasticsearch cluster
+  #hosts: ELK-02-DC1.my.domain.lu
   hosts: elastic
   vars_files:
     - vars/vars.yml
-  gather_facts: False
+  # gather_facts: False
 
   tasks:
+    #- debug: var=ansible_default_ipv4.address
+    #- debug: var=hostvars['ansible_facts']['ansible_default_ipv4']['address']
     # Copy elastic repository file in /etc/yum.repos.d
-    - copy:
-        src: files/elastic.repo
-        dest: /etc/yum.repos.d/elastic.repo
-        owner: root
-        group: root
-        mode: 0644
-        backup: yes
-      become: true
+    #- copy:
+    #    src: files/elastic.repo
+    #    dest: /etc/yum.repos.d/elastic.repo
+    #    owner: root
+    #    group: root
+    #    mode: 0644
+    #    backup: yes
+    #  become: true
     # read the new repository file
-    - command: /usr/bin/yum clean expire-cache
-      become: true
-    - command: /usr/bin/yum repolist
+    #- command: /usr/bin/yum clean expire-cache
+    #  become: true
+    #- command: /usr/bin/yum repolist
+    #  become: true
+
+   # Create elasticsearch logstash user and group
+    - group:
+        name: elasticsearch
+        gid: 2000
+        state: present
       become: true
 
+    - user:
+        name: elasticsearch
+        comment: "elasticsearch user"
+        uid: 2000
+        group: elasticsearch
+        shell: /sbin/nologin
+        state: present
+      become: true
     # Install packages
     - name: Install desired packages
       yum: >
         package={{ item }}
         state=present
+#        key=no
       with_items:
         - elasticsearch
-        - tree
-        - jq
-        - vim
+        - java-1.8.0-openjdk
+     #   - tree
+     #   - jq
+     #   - vim
       become: true
 
     # Create the Elasticsearch.yml file from template
@@ -39,8 +59,9 @@
         dest: /etc/elasticsearch/elasticsearch.yml
         owner: root
         group: elasticsearch
-        mode: "u=rw,g=rw,o=r"
+        mode: "u=rw,g=rw"
         force: yes
+        backup: yes
       become: true
 
     # jvm options /etc/elasticsearch/jvm.options
@@ -48,19 +69,20 @@
     - command: /usr/bin/cp /etc/elasticsearch/jvm.options /etc/elasticsearch/jvm.options.origin
       become: true
     # Copy elastic repository file in /etc/yum.repos.d
-    - copy:
-        src: files/es-jvm.options
+    - template:
+        src: files/jvm.options.j2
         dest: /etc/elasticsearch/jvm.options
         owner: root
         group: elasticsearch
         mode: 0644
+        force: yes
         backup: yes
       become: true
 
-    # pam limit.d
+    # limit.d
     - copy:
-        src: files/es-pam.conf
-        dest: /etc/security/limits.d/elasticsearch-pam.conf
+        src: files/30-elk.conf
+        dest: /etc/security/limits.d/30-elk.conf
         owner: root
         group: root
         mode: 0644
@@ -76,12 +98,26 @@
     - command: /usr/bin/systemctl daemon-reload
       become: true
 
-    # Increase max_map_count Parameter
-    - template:
-        src: files/es-max_map_count.conf.j2
-        dest: /etc/sysctl.d/es-max_map_count.conf
-        owner: root
-        group: root
-        mode: "u=rw,g=rw,o=r"
-        force: yes
+  #Create and check for directories
+
+    - file:
+        dest: /{{item}}
+        state: directory
+        mode: 0750
+        owner: elasticsearch
+        group: elasticsearch
+      with_items:
+          - data1
+          - data2
+          - data3
       become: true
+
+    # Increase max_map_count Parameter
+    #- template:
+    #    src: files/es-max_map_count.conf.j2
+    #    dest: /etc/sysctl.d/es-max_map_count.conf
+    #    owner: root
+    #    group: root
+    #    mode: "u=rw,g=rw,o=r"
+    #    force: yes
+    #  become: true

@@ -1,17 +1,3 @@
 # This is the ansible 'hosts' file.
 [local]
 127.0.0.1
-
-[es-master]
-centos-es-01
-centos-es-02
-
-[es-data]
-centos-es-03
-
-[kibana]
-centos-es-03
-
-[elastic:children]
-es-master
-es-data
